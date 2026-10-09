@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE_URL = "https://scholarly-uguj.onrender.com";
 
 const fileInput = document.getElementById("pdf-file");
 const uploadButton = document.getElementById("upload-btn");
@@ -36,9 +36,11 @@ function addMessage(text, role = "assistant") {
   return bubble.querySelector("p");
 }
 
+
 function backendUrl(path) {
-  return `${API_BASE.replace(/\/$/, "")}${path}`;
+  return `${API_BASE_URL.replace(/\/$/, "")}${path}`;
 }
+
 
 function showUploadStatus(type, filename, detail = "") {
   const icons = {

@@ -1,7 +1,7 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
-
 import json
 
 from schemas import (
@@ -29,7 +29,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Create SQLite tables
 Base.metadata.create_all(bind=engine)
 
 
@@ -45,13 +44,21 @@ app.include_router(documents_router)
 # CORS
 # ==========================================================
 
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:5173",
+        "https://scholarly.trishnajaiswar35.workers.dev",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # ==========================================================
@@ -60,9 +67,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {
-        "message": "NeuroScholar AI Backend Running"
-    }
+    return {"message": "NeuroScholar AI Backend Running"}
 
 
 # ==========================================================
@@ -123,10 +128,6 @@ async def chat_stream(req: ChatRequest):
 
                 event_type = event.get("event")
 
-                # ==================================================
-                # STREAM LLM TOKENS
-                # ==================================================
-
                 if event_type == "on_chat_model_stream":
 
                     chunk = event.get("data", {}).get("chunk")
@@ -134,31 +135,22 @@ async def chat_stream(req: ChatRequest):
                     if chunk is None:
                         continue
 
-                    content = getattr(
-                        chunk,
-                        "content",
-                        "",
-                    )
+                    content = getattr(chunk, "content", "")
 
-                    # Normal string content
                     if isinstance(content, str):
 
                         if content:
-
                             streamed_text += content
-
-                            payload = {
-                                "type": "token",
-                                "content": content,
-                            }
 
                             yield (
                                 "data: "
-                                + json.dumps(payload)
+                                + json.dumps({
+                                    "type": "token",
+                                    "content": content,
+                                })
                                 + "\n\n"
                             )
 
-                    # List / structured content
                     elif isinstance(content, list):
 
                         for item in content:
@@ -167,73 +159,45 @@ async def chat_stream(req: ChatRequest):
 
                             if isinstance(item, str):
                                 text = item
-
                             elif isinstance(item, dict):
                                 text = item.get("text", "")
 
                             if text:
-
                                 streamed_text += text
-
-                                payload = {
-                                    "type": "token",
-                                    "content": text,
-                                }
 
                                 yield (
                                     "data: "
-                                    + json.dumps(payload)
+                                    + json.dumps({
+                                        "type": "token",
+                                        "content": text,
+                                    })
                                     + "\n\n"
                                 )
 
-                # ==================================================
-                # FINAL GRAPH OUTPUT
-                # ==================================================
-
                 elif event_type == "on_chain_end":
 
-                    output = event.get(
-                        "data",
-                        {}
-                    ).get("output")
+                    output = event.get("data", {}).get("output")
 
-                    if not isinstance(output, dict):
-                        continue
+                    if isinstance(output, dict):
+                        answer = output.get("answer")
 
-                    answer = output.get("answer")
-
-                    if answer:
-
-                        final_answer = answer
-
-            # ==================================================
-            # STRUCTURED OUTPUT WORKFLOWS
-            # ==================================================
+                        if answer:
+                            final_answer = answer
 
             if final_answer and not streamed_text:
 
-                payload = {
-                    "type": "final",
-                    "content": str(final_answer),
-                }
-
                 yield (
                     "data: "
-                    + json.dumps(payload)
+                    + json.dumps({
+                        "type": "final",
+                        "content": str(final_answer),
+                    })
                     + "\n\n"
                 )
 
-            # ==================================================
-            # DONE
-            # ==================================================
-
-            payload = {
-                "type": "done",
-            }
-
             yield (
                 "data: "
-                + json.dumps(payload)
+                + json.dumps({"type": "done"})
                 + "\n\n"
             )
 
@@ -243,14 +207,12 @@ async def chat_stream(req: ChatRequest):
             print(repr(e))
             print("=================================\n")
 
-            payload = {
-                "type": "error",
-                "message": str(e),
-            }
-
             yield (
                 "data: "
-                + json.dumps(payload)
+                + json.dumps({
+                    "type": "error",
+                    "message": str(e),
+                })
                 + "\n\n"
             )
 
@@ -281,7 +243,6 @@ def export_report(req: ChatRequest):
     report = result.get("report")
 
     if not report:
-
         return Response(
             content=b"Report generation failed.",
             status_code=500,
@@ -301,7 +262,7 @@ def export_report(req: ChatRequest):
 
 
 # ==========================================================
-# CHAT SESSION PERSISTENCE
+# Chat Session Persistence
 # ==========================================================
 
 @app.post("/sessions")
@@ -310,7 +271,6 @@ def save_session(req: SessionCreate):
     db = SessionLocal()
 
     try:
-
         session = ChatSession(
             title=req.title,
             task=req.task,
@@ -321,9 +281,7 @@ def save_session(req: SessionCreate):
         db.commit()
         db.refresh(session)
 
-        return {
-            "id": session.id
-        }
+        return {"id": session.id}
 
     finally:
         db.close()
@@ -335,7 +293,6 @@ def get_sessions():
     db = SessionLocal()
 
     try:
-
         sessions = db.query(ChatSession).all()
 
         return [
@@ -357,7 +314,6 @@ def load_session(session_id: int):
     db = SessionLocal()
 
     try:
-
         session = (
             db.query(ChatSession)
             .filter(ChatSession.id == session_id)
@@ -365,10 +321,7 @@ def load_session(session_id: int):
         )
 
         if not session:
-
-            return {
-                "error": "Session not found"
-            }
+            return {"error": "Session not found"}
 
         return {
             "id": session.id,
@@ -382,15 +335,11 @@ def load_session(session_id: int):
 
 
 @app.put("/sessions/{session_id}")
-def update_session(
-    session_id: int,
-    req: SessionCreate,
-):
+def update_session(session_id: int, req: SessionCreate):
 
     db = SessionLocal()
 
     try:
-
         session = (
             db.query(ChatSession)
             .filter(ChatSession.id == session_id)
@@ -398,10 +347,7 @@ def update_session(
         )
 
         if not session:
-
-            return {
-                "error": "Session not found"
-            }
+            return {"error": "Session not found"}
 
         session.title = req.title
         session.task = req.task
@@ -409,9 +355,7 @@ def update_session(
 
         db.commit()
 
-        return {
-            "message": "Session updated"
-        }
+        return {"message": "Session updated"}
 
     finally:
         db.close()
@@ -423,7 +367,6 @@ def delete_session(session_id: int):
     db = SessionLocal()
 
     try:
-
         session = (
             db.query(ChatSession)
             .filter(ChatSession.id == session_id)
@@ -431,13 +374,10 @@ def delete_session(session_id: int):
         )
 
         if session:
-
             db.delete(session)
             db.commit()
 
-        return {
-            "message": "Session deleted"
-        }
+        return {"message": "Session deleted"}
 
     finally:
         db.close()
