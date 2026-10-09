@@ -1,13 +1,132 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroScholar AI</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="#" class="logo">NeuroScholar<span>AI</span></a>
+    <div class="nav-links">
+      <a href="#home">Home</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="#dashboard">Launch App</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="home">
+    <div class="hero-content">
+      <span class="eyebrow">AI-POWERED RESEARCH INTELLIGENCE</span>
+      <h1>Read, Compare &amp; Generate Research <span>Faster.</span></h1>
+      <p>Upload research papers, ask questions, compare findings, and generate literature reviews with AI-powered research assistance.</p>
+      <div class="hero-buttons">
+        <a href="#dashboard" class="btn primary">Launch App →</a>
+        <a href="#features" class="btn secondary">Explore Features</a>
+      </div>
+      <div class="hero-points">✓ Citation-aware answers &nbsp; ✓ Multi-document analysis</div>
+    </div>
+    <div class="hero-card">
+      <div class="card-top"><span class="dot"></span> NeuroScholar AI Assistant</div>
+      <div class="question">What are the key findings in my research papers?</div>
+      <div class="answer">
+        <strong>Research summary</strong>
+        <p>Upload your papers and ask a question to get an AI-generated answer based on your documents.</p>
+        <div class="source">📄 Your uploaded research papers</div>
+      </div>
+      <div class="fake-input">Ask your research question...</div>
+    </div>
+  </header>
+
+  <section class="section" id="features">
+    <div class="section-heading">
+      <span class="eyebrow">WHAT YOU CAN DO</span>
+      <h2>Your research workflow, <span>simplified.</span></h2>
+      <p>Tools to help you move from reading papers to actionable insights.</p>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature-card"><div class="feature-icon">⌕</div><h3>Research Q&amp;A</h3><p>Ask questions about your uploaded documents and explore their key ideas.</p><button class="text-button" data-task="qa">Ask a question →</button></article>
+      <article class="feature-card"><div class="feature-icon">⇄</div><h3>Compare Papers</h3><p>Compare methodologies, findings, and limitations across research papers.</p><button class="text-button" data-task="compare_papers">Compare papers →</button></article>
+      <article class="feature-card"><div class="feature-icon">▤</div><h3>Literature Review</h3><p>Organize insights from multiple sources into a structured review.</p><button class="text-button" data-task="literature_review">Generate review →</button></article>
+      <article class="feature-card"><div class="feature-icon">↗</div><h3>Trend Analysis</h3><p>Explore research themes and patterns in your selected documents.</p><button class="text-button" data-task="trend_analysis">Analyze trends →</button></article>
+      <article class="feature-card"><div class="feature-icon">⌘</div><h3>Advanced RAG</h3><p>Retrieve relevant document content to ground responses in your sources.</p></article>
+      <article class="feature-card"><div class="feature-icon">✧</div><h3>AI Research Assistant</h3><p>Use an AI-powered workflow to help with document-based research.</p></article>
+    </div>
+  </section>
+
+  <section class="section about-section" id="about">
+    <div class="section-heading">
+      <span class="eyebrow">ABOUT THE PROJECT</span>
+      <h2>Research smarter with <span>AI.</span></h2>
+      <p>NeuroScholar AI is an AI-powered research intelligence platform designed to help users explore, understand, and synthesize information from research documents.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step"><span>01</span><h3>Upload PDFs</h3><p>Add research papers to your document collection.</p></div>
+      <div class="step"><span>02</span><h3>Retrieve Context</h3><p>Find relevant information from your documents.</p></div>
+      <div class="step"><span>03</span><h3>Analyze</h3><p>Ask questions or select a research task.</p></div>
+      <div class="step"><span>04</span><h3>Get Insights</h3><p>Review the generated response and source information.</p></div>
+    </div>
+  </section>
+
+  <section class="dashboard-section" id="dashboard">
+    <div class="dashboard-header">
+      <div>
+        <span class="eyebrow">RESEARCH WORKSPACE</span>
+        <h2>Your AI research assistant</h2>
+        <p>Upload PDFs, select a task, and ask a question.</p>
+      </div>
+      <span id="connection-status" class="status">Checking backend...</span>
+    </div>
+
+    <div class="workspace">
+      <aside class="panel upload-panel">
+        <h3>Documents</h3>
+        <p class="muted">Upload a research paper in PDF format.</p>
+        <label class="upload-box" for="pdf-file">
+          <span class="upload-icon">↑</span>
+          <strong>Choose a PDF</strong>
+          <span class="muted">Click to select a file</span>
+        </label>
+        <input type="file" id="pdf-file" accept=".pdf,application/pdf" hidden />
+        <button id="upload-btn" class="btn primary full-width">Upload PDF</button>
+        <p id="upload-status" class="message"></p>
+        <div class="document-header"><h4>Your documents</h4><button id="refresh-docs" class="text-button">Refresh</button></div>
+        <div id="document-list" class="document-list">Loading documents...</div>
+      </aside>
+
+      <main class="panel chat-panel">
+        <h3>Research Chat</h3>
+        <label for="task-select">Research task</label>
+        <select id="task-select">
+          <option value="qa">Question &amp; Answer</option>
+          <option value="literature_review">Literature Review</option>
+          <option value="compare_papers">Compare Papers</option>
+          <option value="trend_analysis">Trend Analysis</option>
+        </select>
+        <div id="chat-messages" class="chat-messages">
+          <div class="message-bubble assistant">
+            <strong>NeuroScholar AI</strong>
+            <p>Welcome! Upload a PDF, select a research task, and ask a question to get started.</p>
+          </div>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <textarea id="question-input" rows="2" placeholder="Ask a question about your research..." required></textarea>
+          <button id="send-btn" class="btn primary" type="submit">Send ↑</button>
+        </form>
+        <p class="muted small">AI-generated responses may require verification against the original paper.</p>
+      </main>
+    </div>
+  </section>
+
+  <footer>
+    <a href="#home" class="logo">NeuroScholar<span>AI</span></a>
+    <p>Built to make research more accessible with AI.</p>
+    <p class="muted">© 2026 NeuroScholar AI</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
 </html>
